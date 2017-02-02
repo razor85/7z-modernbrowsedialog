@@ -3,6 +3,8 @@
 #ifndef __WINDOWS_SHELL_H
 #define __WINDOWS_SHELL_H
 
+#define DLL_EXPORT __declspec(dllexport)
+
 #include <windows.h>
 #include <shlobj.h>
 
@@ -80,9 +82,9 @@ public:
 /////////////////////////////
 // Functions
 
-bool GetPathFromIDList(LPCITEMIDLIST itemIDList, CSysString &path);
-bool BrowseForFolder(LPBROWSEINFO lpbi, CSysString &resultPath);
-bool BrowseForFolder(HWND owner, LPCTSTR title, LPCTSTR initialFolder, CSysString &resultPath);
+bool DLL_EXPORT GetPathFromIDList(LPCITEMIDLIST itemIDList, CSysString &path);
+bool DLL_EXPORT BrowseForFolder(LPBROWSEINFO lpbi, CSysString &resultPath);
+bool DLL_EXPORT BrowseForFolder(HWND owner, LPCTSTR title, LPCTSTR initialFolder, CSysString &resultPath);
 
 #ifndef _UNICODE
 bool GetPathFromIDList(LPCITEMIDLIST itemIDList, UString &path);

@@ -4,7 +4,7 @@ LIBS = $(LIBS) oleaut32.lib ole32.lib
 CFLAGS = $(CFLAGS) -DUNICODE -D_UNICODE
 !ENDIF
 
-# CFLAGS = $(CFLAGS) -FAsc -Fa$O/Asm/
+CFLAGS = $(CFLAGS) /TP
 
 !IFNDEF O
 !IFDEF CPU
@@ -30,11 +30,13 @@ LFLAGS = $(LFLAGS) /ENTRY:mainACRTStartup
 !ENDIF
 !ELSE
 !IFNDEF NEW_COMPILER
-LFLAGS = $(LFLAGS) -OPT:NOWIN98
+LFLAGS = $(LFLAGS) 
 !ENDIF
-CFLAGS = $(CFLAGS) -Gr
-LIBS = $(LIBS) user32.lib advapi32.lib shell32.lib
+# CFLAGS = $(CFLAGS) -Gr /TP
+LIBS = $(LIBS) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
 !ENDIF
+
+# LFLAGS = $(LFLAGS) /SUBSYSTEM:WINDOWS /MANIFESTUAC:"level='asInvoker' uiAccess='false'"
 
 !IF "$(CPU)" == "ARM"
 COMPL_ASM = $(MY_ML) $** $O/$(*B).obj
@@ -42,7 +44,7 @@ COMPL_ASM = $(MY_ML) $** $O/$(*B).obj
 COMPL_ASM = $(MY_ML) -c -Fo$O/ $**
 !ENDIF
 
-CFLAGS = $(CFLAGS) -nologo -c -Fo$O/ -W4 -WX -EHsc -Gy -GR- -GF
+CFLAGS = $(CFLAGS) /nologo -c -Fo$O/ -W4 /EHsc /Gy /GR /GF
 
 !IFDEF MY_STATIC_LINK
 !IFNDEF MY_SINGLE_THREAD
@@ -76,24 +78,30 @@ LFLAGS = $(LFLAGS) -DLL -DEF:$(DEF_FILE)
 
 MY_SUB_SYS_VER=6.0
 !IFDEF MY_CONSOLE
-# LFLAGS = $(LFLAGS) /SUBSYSTEM:console,$(MY_SUB_SYS_VER)
+LFLAGS = $(LFLAGS) /SUBSYSTEM:console
 !ELSE
-# LFLAGS = $(LFLAGS) /SUBSYSTEM:windows,$(MY_SUB_SYS_VER)
+LFLAGS = $(LFLAGS) /SUBSYSTEM:windows
 !ENDIF
 
 PROGPATH = $O\$(PROG)
 
 COMPL_O1   = $(CC) $(CFLAGS_O1) $**
 COMPL_O2   = $(CC) $(CFLAGS_O2) $**
-COMPL_PCH  = $(CC) $(CFLAGS_O1) -Yc"StdAfx.h" -Fp$O/a.pch $**
-COMPL      = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $**
+#COMPL_PCH  = $(CC) $(CFLAGS_O1) -Yc"StdAfx.h" -Fp$O/a.pch $**
+COMPL_PCH  = $(CC) $(CFLAGS_O1) -Fp$O/a.pch $**
+#COMPL      = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $**
+COMPL      = $(CC) $(CFLAGS_O1) -Fp$O/a.pch $**
 
-COMPLB    = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $<
+# COMPLB    = $(CC) $(CFLAGS_O1) -Yu"StdAfx.h" -Fp$O/a.pch $<
+COMPLB    = $(CC) $(CFLAGS_O1) -Fp$O/a.pch $<
+
 # COMPLB_O2 = $(CC) $(CFLAGS_O2) -Yu"StdAfx.h" -Fp$O/a.pch $<
 COMPLB_O2 = $(CC) $(CFLAGS_O2) $<
 
-CCOMPL_PCH  = $(CC) $(CFLAGS_O2) -Yc"Precomp.h" -Fp$O/a.pch $**
-CCOMPL_USE  = $(CC) $(CFLAGS_O2) -Yu"Precomp.h" -Fp$O/a.pch $**
+#CCOMPL_PCH  = $(CC) $(CFLAGS_O2) -Yc"Precomp.h" -Fp$O/a.pch $**
+CCOMPL_PCH  = $(CC) $(CFLAGS_O2) -Fp$O/a.pch $**
+#CCOMPL_USE  = $(CC) $(CFLAGS_O2) -Yu"Precomp.h" -Fp$O/a.pch $**
+CCOMPL_USE  = $(CC) $(CFLAGS_O2) -Fp$O/a.pch $**
 CCOMPL      = $(CC) $(CFLAGS_O2) $**
 CCOMPLB     = $(CC) $(CFLAGS_O2) $<
 

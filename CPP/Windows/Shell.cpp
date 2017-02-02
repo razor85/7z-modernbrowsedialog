@@ -1,6 +1,12 @@
 // Windows/Shell.cpp
 
 #include "StdAfx.h"
+// #define CINTERFACE
+
+// IFileDialog
+#include <windows.h>
+#include <shobjidl.h> 
+#include <shlwapi.h>
 
 #include "../Common/MyCom.h"
 #ifndef _UNICODE
@@ -164,13 +170,48 @@ bool BrowseForFolder(HWND /* owner */, LPCTSTR /* title */,
 
 bool BrowseForFolder(LPBROWSEINFO browseInfo, CSysString &resultPath)
 {
-  NWindows::NCOM::CComInitializer comInitializer;
-  LPITEMIDLIST itemIDList = ::SHBrowseForFolder(browseInfo);
-  if (itemIDList == NULL)
-    return false;
-  CItemIDList itemIDListHolder;
-  itemIDListHolder.Attach(itemIDList);
-  return GetPathFromIDList(itemIDList, resultPath);
+  HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+  if (SUCCEEDED(hr))
+  {
+    IFileOpenDialog *pFileOpen;
+
+    // Create the FileOpenDialog object.
+    hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_INPROC_SERVER,
+      IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+    if (SUCCEEDED(hr))
+    {
+      // Show the Open dialog box.
+      pFileOpen->SetOptions(FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
+      hr = pFileOpen->Show(NULL);
+
+      // Get the file name from the dialog box.
+      if (SUCCEEDED(hr))
+      {
+        IShellItem *pItem;
+        hr = pFileOpen->GetFolder(&pItem);
+        if (SUCCEEDED(hr))
+        {
+          PWSTR pszFilePath;
+          hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+          // Display the file name to the user.
+          if (SUCCEEDED(hr))
+          {
+            resultPath = CSysString(pszFilePath);
+            CoTaskMemFree(pszFilePath);
+
+            return true;
+          }
+          pItem->Release();
+        }
+      }
+      pFileOpen->Release();
+    }
+    CoUninitialize();
+  }
+
+  return false;
 }
 
 
@@ -234,7 +275,7 @@ bool BrowseForFolder(HWND owner, LPCTSTR title,
       #ifndef UNDER_CE
       BIF_NEWDIALOGSTYLE |
       #endif
-      BIF_RETURNONLYFSDIRS | BIF_STATUSTEXT, initialFolder, resultPath);
+      BIF_RETURNONLYFSDIRS | BIF_EDITBOX, initialFolder, resultPath);
   // BIF_STATUSTEXT; BIF_USENEWUI   (Version 5.0)
 }
 
@@ -320,13 +361,13 @@ bool BrowseForFolder(HWND owner, LPCWSTR title, LPCWSTR initialFolder, UString &
 {
   if (g_IsNT)
     return BrowseForFolder(owner, title,
-      BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS
+      BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS | BIF_EDITBOX
       //  | BIF_STATUSTEXT // This flag is not supported when BIF_NEWDIALOGSTYLE is specified.
       , initialFolder, resultPath);
   // BIF_STATUSTEXT; BIF_USENEWUI   (Version 5.0)
   CSysString s;
   bool res = BrowseForFolder(owner, GetSystemString(title),
-      BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS
+      BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS | BIF_EDITBOX
       // | BIF_STATUSTEXT  // This flag is not supported when BIF_NEWDIALOGSTYLE is specified.
       , GetSystemString(initialFolder), s);
   resultPath = GetUnicodeString(s);
