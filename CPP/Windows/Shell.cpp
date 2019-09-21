@@ -182,7 +182,10 @@ bool BrowseForFolder(LPBROWSEINFO browseInfo, CSysString &resultPath)
     if (SUCCEEDED(hr))
     {
       // Show the Open dialog box.
-      pFileOpen->SetOptions(FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
+      DWORD defaultOptions;
+      pFileOpen->GetOptions(&defaultOptions);
+      pFileOpen->SetOptions(defaultOptions | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM);
+
       hr = pFileOpen->Show(NULL);
 
       // Get the file name from the dialog box.
